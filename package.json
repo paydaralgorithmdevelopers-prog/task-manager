@@ -1,0 +1,136 @@
+{
+  "name": "reactjs-boilerplate",
+  "version": "1.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "build:e2e": "cp -n example.env.local .env.local && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@faker-js/faker": "^10.4.0",
+    "@fontsource/roboto": "^5.2.10",
+    "@hookform/resolvers": "^5.4.0",
+    "@mui/icons-material": "9.0.1",
+    "@mui/material": "9.0.1",
+    "@mui/x-date-pickers": "9.3.0",
+    "@react-oauth/google": "^0.13.5",
+    "@types/node": "25.9.1",
+    "@types/react": "19.2.15",
+    "@types/react-dom": "19.2.3",
+    "accept-language": "^3.0.20",
+    "bcryptjs": "^3.0.3",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "date-fns": "^4.3.0",
+    "dotenv": "^17.4.2",
+    "dotenv-expand": "^13.0.0",
+    "drizzle-orm": "^0.45.2",
+    "eslint": "10.4.0",
+    "eslint-config-next": "16.2.6",
+    "i18next": "26.3.0",
+    "i18next-browser-languagedetector": "^8.2.1",
+    "i18next-resources-to-backend": "^1.2.1",
+    "imap": "^0.8.19",
+    "js-cookie": "^3.0.7",
+    "jsonwebtoken": "^9.0.3",
+    "mailparser": "^3.9.8",
+    "mui-tiptap": "^1.30.0",
+    "nanoid": "^5.1.11",
+    "next": "16.2.6",
+    "pg": "^8.21.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "react-dropzone": "^15.0.0",
+    "react-hook-form": "^7.76.1",
+    "react-i18next": "^17.0.8",
+    "react-toastify": "^11.1.0",
+    "react-virtuoso": "4.18.7",
+    "typescript": "6.0.3",
+    "yup": "^1.7.1"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.0.1",
+    "@commitlint/config-conventional": "^21.0.1",
+    "@playwright/test": "^1.60.0",
+    "@release-it/conventional-changelog": "^11.0.0",
+    "@types/imap": "^0.8.43",
+    "@types/js-cookie": "^3.0.6",
+    "@types/mailparser": "^3.4.6",
+    "@types/pg": "^8.20.0",
+    "@typescript-eslint/eslint-plugin": "^8.60.0",
+    "@typescript-eslint/parser": "^8.60.0",
+    "drizzle-kit": "^0.31.10",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "husky": "^9.1.7",
+    "is-ci": "^4.1.0",
+    "prettier": "^3.8.3",
+    "release-it": "^20.0.1",
+    "tsx": "^4.22.3"
+  },
+  "release-it": {
+    "git": {
+      "commitMessage": "chore: release v${version}"
+    },
+    "github": {
+      "release": true
+    },
+    "npm": {
+      "publish": false
+    },
+    "plugins": {
+      "@release-it/conventional-changelog": {
+        "infile": "CHANGELOG.md",
+        "preset": {
+          "name": "conventionalcommits",
+          "types": [
+            {
+              "type": "feat",
+              "section": "Features"
+            },
+            {
+              "type": "fix",
+              "section": "Bug Fixes"
+            },
+            {
+              "type": "perf",
+              "section": "Performance Improvements"
+            },
+            {
+              "type": "revert",
+              "section": "Reverts"
+            },
+            {
+              "type": "docs",
+              "section": "Documentation"
+            },
+            {
+              "type": "refactor",
+              "section": "Code Refactoring"
+            },
+            {
+              "type": "test",
+              "section": "Tests"
+            },
+            {
+              "type": "ci",
+              "section": "Continuous Integration"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "overrides": {
+    "@types/react": "19.2.15",
+    "@types/react-dom": "19.2.3"
+  }
+}
