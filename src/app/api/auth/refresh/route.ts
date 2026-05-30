@@ -1,23 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/server/services/auth/auth.service';
-import { loginSchema } from '@/server/utils/validators';
 import { formatErrorResponse } from '@/server/utils/errors';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    // Get refresh token from cookies
+    const refreshToken = request.cookies.get('refreshToken')?.value;
 
-    // Validate input
-    const validatedData = loginSchema.parse(body);
+    if (!refreshToken) {
+      return NextResponse.json({ error: { message: 'Refresh token not found', statusCode: 401 } }, { status: 401 });
+    }
 
-    // Get IP and user agent
-    const ipAddress = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined;
-    const userAgent = request.headers.get('user-agent') || undefined;
+    // Refresh tokens
+    const result = await authService.refreshToken(refreshToken);
 
-    // Login user
-    const result = await authService.login(validatedData, ipAddress, userAgent);
-
-    // Set secure cookies
+    // Set new cookies
     const response = NextResponse.json(result, { status: 200 });
 
     response.cookies.set('accessToken', result.tokens.accessToken, {
@@ -37,6 +34,12 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error: any) {
     const errorResponse = formatErrorResponse(error);
-    return NextResponse.json(errorResponse, { status: error.statusCode || 500 });
+
+    // Clear invalid cookies
+    const response = NextResponse.json(errorResponse, { status: error.statusCode || 500 });
+    response.cookies.set('accessToken', '', { maxAge: 0 });
+    response.cookies.set('refreshToken', '', { maxAge: 0 });
+
+    return response;
   }
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/server/services/auth/auth.service';
-import { loginSchema } from '@/server/utils/validators';
+import { signupSchema } from '@/server/utils/validators';
 import { formatErrorResponse } from '@/server/utils/errors';
 
 export async function POST(request: NextRequest) {
@@ -8,17 +8,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate input
-    const validatedData = loginSchema.parse(body);
+    const validatedData = signupSchema.parse(body);
 
-    // Get IP and user agent
-    const ipAddress = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined;
-    const userAgent = request.headers.get('user-agent') || undefined;
-
-    // Login user
-    const result = await authService.login(validatedData, ipAddress, userAgent);
+    // Signup user
+    const result = await authService.signup(validatedData);
 
     // Set secure cookies
-    const response = NextResponse.json(result, { status: 200 });
+    const response = NextResponse.json(result, { status: 201 });
 
     response.cookies.set('accessToken', result.tokens.accessToken, {
       httpOnly: true,
