@@ -51,7 +51,7 @@ export const createOrganizationSchema = z.object({
 export const updateOrganizationSchema = z.object({
   name: z.string().min(2, 'Organization name must be at least 2 characters').optional(),
   logoUrl: z.string().url('Invalid URL').optional(),
-  settings: z.record(z.any()).optional(),
+  settings: z.record(z.string(), z.any()).optional(),
 });
 
 // ============================================
@@ -115,7 +115,7 @@ export const createTaskSchema = z.object({
   sprintId: z.number().int().positive().optional(),
   assignedTo: z.number().int().positive().optional(),
   storyPoints: z.number().int().positive().optional(),
-  estimatedHours: z.number().positive().optional(),
+  estimatedHours: z.number().positive().optional().transform(n => n != null ? String(n) : undefined),
   dueDate: z.string().optional(),
   parentTaskId: z.number().int().positive().optional(),
 });
@@ -131,8 +131,8 @@ export const updateTaskSchema = z.object({
   sprintId: z.number().int().positive().nullable().optional(),
   assignedTo: z.number().int().positive().nullable().optional(),
   storyPoints: z.number().int().positive().nullable().optional(),
-  estimatedHours: z.number().positive().nullable().optional(),
-  actualHours: z.number().positive().nullable().optional(),
+  estimatedHours: z.number().positive().nullable().optional().transform(n => n != null ? String(n) : n ?? undefined),
+  actualHours: z.number().positive().nullable().optional().transform(n => n != null ? String(n) : n ?? undefined),
   dueDate: z.string().nullable().optional(),
   position: z.number().int().optional(),
 });

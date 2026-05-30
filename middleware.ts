@@ -1,16 +1,16 @@
-import { jwtService } from "@/services/auth/jwt.service";
+import { jwtVerify } from "jose";
 import { NextRequest, NextResponse } from "next/server";
 
 // Routes that don't require authentication
 const publicRoutes = [
   "/login",
-  "/sign-up",
+  "/signup",
   "/forgot-password",
   "/privacy-policy",
   "/",
 ];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Extract language code from pathname (e.g., /en/dashboard -> 'en')
@@ -37,8 +37,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Verify token validity
-  const payload = jwtService.verifyAccessToken(token);
+  // Verify token validity using jose (Edge Runtime compatible)
+  const secret = new TextEncoder().encode(
+    process.env.JWT_SECRET || "your-secret-key"
+  );
+  let payload: { userId: string; email: string; role: string } | null = null;
+  try {
+    const { payload: decoded } = await jwtVerify(token, secret);
+    payload = decoded as { userId: string; email: string; role: string };
+  } catch {
+    payload = null;
+  }
 
   if (!payload) {
     // Token is invalid or expired

@@ -1,5 +1,6 @@
-import { Box, Button, Container, Typography, Grid, Card, CardContent } from '@mui/material';
-import { CheckCircle, Speed, Security, People, Cloud, Zap } from '@mui/icons-material';
+'use client';
+import { Bolt, CheckCircle, Cloud, People, Security, Speed } from '@mui/icons-material';
+import { Box, Button, Card, CardContent, Container, Grid, Typography } from '@mui/material';
 import Link from 'next/link';
 
 export default function HomePage() {
@@ -10,7 +11,7 @@ export default function HomePage() {
       description: 'Organize tasks with intuitive drag-and-drop boards',
     },
     {
-      icon: <Zap sx={{ fontSize: 40 }} />,
+      icon: <Bolt sx={{ fontSize: 40 }} />,
       title: 'Real-time Collaboration',
       description: 'See updates instantly with WebSocket technology',
     },
@@ -96,7 +97,7 @@ export default function HomePage() {
       {/* Features Section */}
       <Container maxWidth="lg" sx={{ py: 12 }}>
         <Box sx={{ textAlign: 'center', mb: 8 }}>
-          <Typography variant="h2" fontWeight={700} gutterBottom>
+          <Typography variant="h2" sx={{ fontWeight: 700 }} gutterBottom>
             Everything you need to manage projects
           </Typography>
           <Typography variant="h6" color="text.secondary">
@@ -106,7 +107,7 @@ export default function HomePage() {
 
         <Grid container spacing={4}>
           {features.map((feature, idx) => (
-            <Grid item xs={12} md={6} lg={4} key={idx}>
+            <Grid size={{ xs: 12, md: 6, lg: 4 }} key={idx}>
               <Card sx={{ height: '100%', textAlign: 'center' }}>
                 <CardContent sx={{ p: 4 }}>
                   <Box
@@ -125,7 +126,7 @@ export default function HomePage() {
                   >
                     {feature.icon}
                   </Box>
-                  <Typography variant="h5" fontWeight={600} gutterBottom>
+                  <Typography variant="h5" sx={{ fontWeight: 600 }} gutterBottom>
                     {feature.title}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
@@ -142,7 +143,7 @@ export default function HomePage() {
       <Box sx={{ py: 12, backgroundColor: (theme) => theme.palette.background.paper }}>
         <Container maxWidth="md">
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h3" fontWeight={700} gutterBottom>
+            <Typography variant="h3" sx={{ fontWeight: 700 }} gutterBottom>
               Ready to get started?
             </Typography>
             <Typography variant="h6" color="text.secondary" sx={{ mb: 4 }}>

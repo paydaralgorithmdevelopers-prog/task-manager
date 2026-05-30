@@ -19,8 +19,8 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Build the application
-RUN npm run build
+# Build the application (--webpack required: Turbopack doesn't generate middleware.js.nft.json for standalone output)
+RUN npx next build --webpack
 
 # Production image, copy all the files and run next
 FROM base AS runner

@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { Box, TextField, Typography, Alert } from '@mui/material';
 import { Button } from '@/shared/components/ui/button';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Alert, Box, TextField, Typography } from '@mui/material';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useAuthStore } from '../store/auth-store';
-import { useRouter } from 'next/navigation';
 
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -63,7 +63,7 @@ export function SignupForm() {
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%', maxWidth: 400 }}>
+    <Box component="form" method="post" onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%', maxWidth: 400 }}>
       <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
         Create Account
       </Typography>

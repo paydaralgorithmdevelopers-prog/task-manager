@@ -76,8 +76,7 @@ export default function DashboardPage() {
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
               TaskMaster Dashboard
             </Typography>
-            <Typography color="textSecondary">
-              Welcome back, {user?.name}
+            <Typography color="text.secondary">
             </Typography>
           </Box>
           <Button
@@ -93,7 +92,7 @@ export default function DashboardPage() {
         {/* Kanban Board Placeholder */}
         <Grid container spacing={3}>
           {["To Do", "In Progress", "Done"].map((column) => (
-            <Grid item xs={12} md={4} key={column}>
+            <Grid size={{ xs: 12, md: 4 }} key={column}>
               <Card
                 sx={{
                   border: "2px solid #333",
@@ -105,8 +104,7 @@ export default function DashboardPage() {
                   <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
                     {column}
                   </Typography>
-                  <Typography color="textSecondary">
-                    Tasks will appear here
+                  <Typography color="text.secondary">
                   </Typography>
                 </CardContent>
               </Card>

@@ -1,7 +1,7 @@
 import { Server as HTTPServer } from 'http';
-import { Server as SocketIOServer, Socket } from 'socket.io';
-import { verifyAccessToken } from '../utils/jwt';
+import { Socket, Server as SocketIOServer } from 'socket.io';
 import { userRepository } from '../repositories/user.repository';
+import { verifyAccessToken } from '../utils/jwt';
 
 export interface AuthenticatedSocket extends Socket {
   userId: number;
@@ -87,7 +87,7 @@ class SocketServer {
       const presence: UserPresence = {
         userId,
         email,
-        fullName: user?.fullName || null,
+        fullName: user?.name || null,
         status: 'online',
         lastSeen: new Date(),
       };

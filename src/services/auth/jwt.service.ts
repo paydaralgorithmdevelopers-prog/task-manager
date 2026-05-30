@@ -12,11 +12,11 @@ export class JwtService {
    */
   generateTokens(payload: AuthPayload): AuthTokens {
     const accessToken = jwt.sign(payload, this.secret, {
-      expiresIn: this.expiration,
+      expiresIn: this.expiration as any,
     });
 
     const refreshToken = jwt.sign(payload, this.refreshSecret, {
-      expiresIn: this.refreshExpiration,
+      expiresIn: this.refreshExpiration as any,
     });
 
     return { accessToken, refreshToken };

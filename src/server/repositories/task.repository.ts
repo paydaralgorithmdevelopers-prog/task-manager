@@ -1,14 +1,14 @@
 import { db } from '@/db';
-import { tasks, taskLabels, taskWatchers, Task, NewTask } from '@/db/schema';
-import { eq, and, inArray, desc, sql, or } from 'drizzle-orm';
+import { NewTask, Task, taskLabels, tasks, taskWatchers } from '@/db/schema';
+import { and, desc, eq, or, sql } from 'drizzle-orm';
 
 export class TaskRepository {
   /**
    * Create a new task
    */
   async create(data: NewTask): Promise<Task> {
-    const [task] = await db.insert(tasks).values(data).returning();
-    return task;
+    const result = await db.insert(tasks).values(data).returning();
+    return (result as Task[])[0];
   }
 
   /**

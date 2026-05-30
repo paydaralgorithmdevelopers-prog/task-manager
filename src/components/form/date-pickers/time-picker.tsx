@@ -1,20 +1,19 @@
-import * as React from "react";
-import {
-  LocalizationProvider,
-  TimePicker,
-  TimeStepOptions,
-  TimeView,
-} from "@mui/x-date-pickers";
-import {
-  Controller,
-  ControllerProps,
-  FieldPath,
-  FieldValues,
-} from "react-hook-form";
-import { ForwardedRef, forwardRef } from "react";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
-import useLanguage from "@/services/i18n/use-language";
 import { getValueByKey } from "@/components/form/date-pickers/helper";
+import useLanguage from "@/services/i18n/use-language";
+import {
+    LocalizationProvider,
+    TimePicker,
+    TimeStepOptions,
+    TimeView,
+} from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { ForwardedRef, forwardRef } from "react";
+import {
+    Controller,
+    ControllerProps,
+    FieldPath,
+    FieldValues,
+} from "react-hook-form";
 
 type ValueDateType = Date | null | undefined;
 type TimePickerFieldProps = {
@@ -71,9 +70,9 @@ function TimePickerInputRaw(
           textField: {
             helperText: props.error,
             error: !!props.error,
-            InputProps: {
-              readOnly: props.readOnly,
-            },
+          },
+          field: {
+            readOnly: props.readOnly,
           },
         }}
         onAccept={props.onChange}

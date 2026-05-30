@@ -1,8 +1,8 @@
 'use client';
 
-import { Box, Typography, Button, Breadcrumbs, Link, Chip } from '@mui/material';
-import { Add as AddIcon, Settings as SettingsIcon, FilterList as FilterIcon } from '@mui/icons-material';
 import { KanbanBoard } from '@/features/kanban/components/kanban-board';
+import { Add as AddIcon, FilterList as FilterIcon, Settings as SettingsIcon } from '@mui/icons-material';
+import { Box, Breadcrumbs, Button, Chip, Link, Typography } from '@mui/material';
 import { use } from 'react';
 
 interface BoardPageProps {
@@ -32,7 +32,7 @@ export default function BoardPage({ params }: BoardPageProps) {
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="h4" fontWeight={700}>
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>
             {project.name}
           </Typography>
           <Chip label={project.key} size="small" />

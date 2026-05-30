@@ -1,21 +1,20 @@
 'use client';
 
+import { Add as AddIcon, Folder as FolderIcon, MoreVert as MoreVertIcon } from '@mui/icons-material';
 import {
-  Box,
-  Typography,
-  Button,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-  Chip,
-  Avatar,
-  AvatarGroup,
-  IconButton,
-  Menu,
-  MenuItem,
+    Avatar,
+    AvatarGroup,
+    Box,
+    Button,
+    Card,
+    CardContent,
+    Chip,
+    Grid,
+    IconButton,
+    Menu,
+    MenuItem,
+    Typography
 } from '@mui/material';
-import { Add as AddIcon, MoreVert as MoreVertIcon, Folder as FolderIcon } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -96,7 +95,7 @@ export default function ProjectsPage() {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Box>
-          <Typography variant="h4" fontWeight={700} gutterBottom>
+          <Typography variant="h4" sx={{ fontWeight: 700 }} gutterBottom>
             Projects
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -110,7 +109,7 @@ export default function ProjectsPage() {
 
       <Grid container spacing={3}>
         {projects.map((project) => (
-          <Grid item xs={12} md={6} lg={4} key={project.id}>
+          <Grid size={{ xs: 12, md: 6, lg: 4 }} key={project.id}>
             <Card
               sx={{
                 height: '100%',
@@ -142,7 +141,7 @@ export default function ProjectsPage() {
                       <FolderIcon />
                     </Box>
                     <Box>
-                      <Typography variant="h6" fontWeight={600}>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
                         {project.name}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">

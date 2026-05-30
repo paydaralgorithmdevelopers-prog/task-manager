@@ -1,17 +1,17 @@
 "use client";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
+import { InputBaseComponentProps } from "@mui/material/InputBase";
 import TextField from "@mui/material/TextField";
 import React, { ChangeEvent, forwardRef, useState } from "react";
 import {
-  Controller,
-  ControllerProps,
-  FieldPath,
-  FieldValues,
+    Controller,
+    ControllerProps,
+    FieldPath,
+    FieldValues,
 } from "react-hook-form";
-import { InputBaseComponentProps } from "@mui/material/InputBase/InputBase";
 
 type TextInputProps = {
   label: string;

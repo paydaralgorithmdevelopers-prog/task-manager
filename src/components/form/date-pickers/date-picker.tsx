@@ -1,19 +1,18 @@
-import * as React from "react";
+import { getValueByKey } from "@/components/form/date-pickers/helper";
+import useLanguage from "@/services/i18n/use-language";
 import {
   DatePicker,
   DateView,
   LocalizationProvider,
 } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { ForwardedRef, forwardRef } from "react";
 import {
   Controller,
   ControllerProps,
   FieldPath,
   FieldValues,
 } from "react-hook-form";
-import { ForwardedRef, forwardRef } from "react";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
-import useLanguage from "@/services/i18n/use-language";
-import { getValueByKey } from "@/components/form/date-pickers/helper";
 
 type ValueDateType = Date | null | undefined;
 type DatePickerFieldProps = {
@@ -67,9 +66,9 @@ function DatePickerInputRaw(
           textField: {
             helperText: props.error,
             error: !!props.error,
-            InputProps: {
-              readOnly: props.readOnly,
-            },
+          },
+          field: {
+            readOnly: props.readOnly,
           },
         }}
         onAccept={props.onChange}

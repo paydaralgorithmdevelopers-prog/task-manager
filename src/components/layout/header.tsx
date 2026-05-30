@@ -1,11 +1,11 @@
 'use client';
 
-import { AppBar, Toolbar, Typography, Box, IconButton, Badge, TextField, InputAdornment } from '@mui/material';
 import {
-  Search as SearchIcon,
-  Notifications as NotificationsIcon,
-  Settings as SettingsIcon,
+    Notifications as NotificationsIcon,
+    Search as SearchIcon,
+    Settings as SettingsIcon,
 } from '@mui/icons-material';
+import { AppBar, Badge, Box, IconButton, InputAdornment, TextField, Toolbar } from '@mui/material';
 import { useRouter } from 'next/navigation';
 
 export function Header() {
@@ -32,12 +32,14 @@ export function Header() {
               borderRadius: '10px',
             },
           }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            },
           }}
         />
 

@@ -20,7 +20,7 @@ export async function verifyAuth(request: NextRequest): Promise<{
 }> {
   try {
     const authHeader = request.headers.get("authorization");
-    const token = jwtService.extractTokenFromHeader(authHeader);
+    const token = jwtService.extractTokenFromHeader(authHeader ?? undefined);
 
     if (!token) {
       return {

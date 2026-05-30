@@ -1,17 +1,17 @@
 'use client';
 
+import { Assignment, CheckCircle, Schedule, TrendingUp } from '@mui/icons-material';
 import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  LinearProgress,
-  Chip,
-  Avatar,
-  AvatarGroup,
+    Avatar,
+    AvatarGroup,
+    Box,
+    Card,
+    CardContent,
+    Chip,
+    Grid,
+    LinearProgress,
+    Typography,
 } from '@mui/material';
-import { TrendingUp, Assignment, CheckCircle, Schedule } from '@mui/icons-material';
 
 export default function DashboardPage() {
   // Mock data
@@ -51,7 +51,7 @@ export default function DashboardPage() {
 
   return (
     <Box>
-      <Typography variant="h4" fontWeight={700} gutterBottom>
+      <Typography variant="h4" sx={{ fontWeight: 700 }} gutterBottom>
         Dashboard
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
@@ -61,7 +61,7 @@ export default function DashboardPage() {
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {stats.map((stat) => (
-          <Grid item xs={12} sm={6} md={3} key={stat.label}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={stat.label}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
@@ -80,7 +80,7 @@ export default function DashboardPage() {
                     {stat.icon}
                   </Box>
                 </Box>
-                <Typography variant="h4" fontWeight={700}>
+                <Typography variant="h4" sx={{ fontWeight: 700 }}>
                   {stat.value}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -93,16 +93,16 @@ export default function DashboardPage() {
       </Grid>
 
       {/* Recent Projects */}
-      <Typography variant="h5" fontWeight={700} gutterBottom>
+      <Typography variant="h5" sx={{ fontWeight: 700 }} gutterBottom>
         Recent Projects
       </Typography>
       <Grid container spacing={3}>
         {recentProjects.map((project) => (
-          <Grid item xs={12} md={6} lg={4} key={project.id}>
+          <Grid size={{ xs: 12, md: 6, lg: 4 }} key={project.id}>
             <Card>
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                  <Typography variant="h6" fontWeight={600}>
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {project.name}
                   </Typography>
                   <Chip label={project.status} size="small" color="primary" />
@@ -113,7 +113,7 @@ export default function DashboardPage() {
                     <Typography variant="body2" color="text.secondary">
                       Progress
                     </Typography>
-                    <Typography variant="body2" fontWeight={600}>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
                       {project.progress}%
                     </Typography>
                   </Box>

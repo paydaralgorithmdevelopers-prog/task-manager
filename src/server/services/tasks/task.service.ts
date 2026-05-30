@@ -1,9 +1,9 @@
-import { taskRepository } from '@/server/repositories/task.repository';
 import { projectRepository } from '@/server/repositories/project.repository';
 import { sprintRepository } from '@/server/repositories/sprint.repository';
-import { NotFoundError, BadRequestError, ForbiddenError } from '@/server/utils/errors';
+import { taskRepository } from '@/server/repositories/task.repository';
+import { BadRequestError, ForbiddenError, NotFoundError } from '@/server/utils/errors';
+import { hasPermission, UserWithPermissions } from '@/server/utils/permissions';
 import { CreateTaskInput, UpdateTaskInput } from '@/server/utils/validators';
-import { hasPermission } from '@/server/utils/permissions';
 
 export class TaskService {
   /**
@@ -99,10 +99,8 @@ export class TaskService {
     }
 
     // Check permissions (simplified - in production, check user role)
-    const user = { id: userId, role: undefined as any };
-    if (!hasPermission(user, 'task.update', task)) {
-      throw new ForbiddenError('Not authorized to update this task');
-    }
+    const user = { id: userId, role: undefined as any } as UserWithPermissions;
+    if (!hasPermission(user, 'task.update', task))
 
     // Verify sprint exists if being updated
     if (data.sprintId) {
@@ -127,7 +125,7 @@ export class TaskService {
     }
 
     // Check permissions
-    const user = { id: userId, role: undefined as any };
+    const user = { id: userId, role: undefined as any } as UserWithPermissions;
     if (!hasPermission(user, 'task.delete', task)) {
       throw new ForbiddenError('Not authorized to delete this task');
     }

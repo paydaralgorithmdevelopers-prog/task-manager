@@ -1,32 +1,32 @@
 'use client';
 
-import {
-  Box,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Typography,
-  Divider,
-  Avatar,
-  IconButton,
-} from '@mui/material';
-import {
-  Dashboard as DashboardIcon,
-  Folder as FolderIcon,
-  People as PeopleIcon,
-  Settings as SettingsIcon,
-  Business as BusinessIcon,
-  Analytics as AnalyticsIcon,
-  Notifications as NotificationsIcon,
-  Chat as ChatIcon,
-  Menu as MenuIcon,
-} from '@mui/icons-material';
-import { useRouter, usePathname } from 'next/navigation';
-import { useState } from 'react';
 import { useAuthStore } from '@/features/auth/store/auth-store';
+import {
+    Analytics as AnalyticsIcon,
+    Business as BusinessIcon,
+    Chat as ChatIcon,
+    Dashboard as DashboardIcon,
+    Folder as FolderIcon,
+    Menu as MenuIcon,
+    Notifications as NotificationsIcon,
+    People as PeopleIcon,
+    Settings as SettingsIcon,
+} from '@mui/icons-material';
+import {
+    Avatar,
+    Box,
+    Divider,
+    Drawer,
+    IconButton,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemIcon,
+    ListItemText,
+    Typography,
+} from '@mui/material';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 const DRAWER_WIDTH = 260;
 
@@ -86,7 +86,7 @@ export function Sidebar() {
         >
           T
         </Box>
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>
           TaskManager
         </Typography>
       </Box>
@@ -165,11 +165,11 @@ export function Sidebar() {
           onClick={() => handleNavigation('/profile')}
         >
           <Avatar sx={{ width: 36, height: 36 }}>
-            {user?.fullName?.charAt(0) || user?.email?.charAt(0) || 'U'}
+            {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="body2" fontWeight={600} noWrap>
-              {user?.fullName || 'User'}
+            <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
+              {user?.name || 'User'}
             </Typography>
             <Typography variant="caption" color="text.secondary" noWrap>
               {user?.email}

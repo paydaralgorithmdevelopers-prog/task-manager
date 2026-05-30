@@ -1,17 +1,18 @@
 import {
-  pgTable,
-  integer,
-  varchar,
-  text,
-  timestamp,
-  boolean,
-  jsonb,
-  decimal,
-  pgEnum,
-  uniqueIndex,
-  index,
-  date,
-  inet,
+    AnyPgColumn,
+    boolean,
+    date,
+    decimal,
+    index,
+    inet,
+    integer,
+    jsonb,
+    pgEnum,
+    pgTable,
+    text,
+    timestamp,
+    uniqueIndex,
+    varchar,
 } from 'drizzle-orm/pg-core';
 
 // ============================================
@@ -296,7 +297,7 @@ export const tasks = pgTable(
       .notNull()
       .references(() => projects.id, { onDelete: 'cascade' }),
     sprintId: integer('sprint_id').references(() => sprints.id, { onDelete: 'set null' }),
-    parentTaskId: integer('parent_task_id').references(() => tasks.id, { onDelete: 'cascade' }),
+    parentTaskId: integer('parent_task_id').references((): AnyPgColumn => tasks.id, { onDelete: 'cascade' }),
     title: varchar({ length: 500 }).notNull(),
     description: text(),
     type: taskTypeEnum().notNull().default('feature'),
@@ -378,7 +379,7 @@ export const comments = pgTable(
     userId: integer('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    parentCommentId: integer('parent_comment_id').references(() => comments.id, { onDelete: 'cascade' }),
+    parentCommentId: integer('parent_comment_id').references((): AnyPgColumn => comments.id, { onDelete: 'cascade' }),
     content: text().notNull(),
     mentions: jsonb().default([]), // Array of user IDs
     attachments: jsonb().default([]),
