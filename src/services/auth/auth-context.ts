@@ -1,29 +1,21 @@
 "use client";
 
-import { Tokens } from "@/services/api/types/tokens";
-import { User } from "@/services/api/types/user";
+import { AuthUser } from "@/types/auth.types";
 import { createContext } from "react";
 
-export type TokensInfo = Tokens | null;
-
 export const AuthContext = createContext<{
-  user: User | null;
+  user: AuthUser | null;
   isLoaded: boolean;
 }>({
   user: null,
-  isLoaded: true,
+  isLoaded: false,
 });
 
 export const AuthActionsContext = createContext<{
-  setUser: (user: User) => void;
+  setUser: (user: AuthUser | null) => void;
   logOut: () => Promise<void>;
 }>({
   setUser: () => {},
   logOut: async () => {},
 });
 
-export const AuthTokensContext = createContext<{
-  setTokensInfo: (tokensInfo: TokensInfo) => void;
-}>({
-  setTokensInfo: () => {},
-});

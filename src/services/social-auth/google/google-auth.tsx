@@ -1,17 +1,17 @@
 "use client";
 
+import { FullPageLoader } from "@/components/full-page-loader";
 import { useAuthGoogleLoginService } from "@/services/api/services/auth";
 import HTTP_CODES_ENUM from "@/services/api/types/http-codes";
 import useAuthActions from "@/services/auth/use-auth-actions";
-import useAuthTokens from "@/services/auth/use-auth-tokens";
+import useLanguage from "@/services/i18n/use-language";
+import { AuthUser } from "@/types/auth.types";
 import { CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import { useState } from "react";
-import { FullPageLoader } from "@/components/full-page-loader";
-import useLanguage from "@/services/i18n/use-language";
 
 export default function GoogleAuth() {
   const { setUser } = useAuthActions();
-  const { setTokensInfo } = useAuthTokens();
+  // setTokensInfo removed — auth now uses httpOnly cookies only
   const authGoogleLoginService = useAuthGoogleLoginService();
   const language = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
@@ -26,12 +26,7 @@ export default function GoogleAuth() {
     });
 
     if (status === HTTP_CODES_ENUM.OK) {
-      setTokensInfo({
-        token: data.token,
-        refreshToken: data.refreshToken,
-        tokenExpires: data.tokenExpires,
-      });
-      setUser(data.user);
+      setUser(data.user as unknown as AuthUser);
     }
     setIsLoading(false);
   };

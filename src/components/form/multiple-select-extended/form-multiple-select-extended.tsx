@@ -1,27 +1,27 @@
 "use client";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import ClickAwayListener from "@mui/material/ClickAwayListener";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
+import ListItemText from "@mui/material/ListItemText";
 import TextField from "@mui/material/TextField";
-import ClickAwayListener from "@mui/material/ClickAwayListener";
 import React, {
-  ForwardedRef,
-  forwardRef,
-  useState,
-  useRef,
-  useEffect,
+    ForwardedRef,
+    forwardRef,
+    useEffect,
+    useRef,
+    useState,
 } from "react";
 import {
-  Controller,
-  ControllerProps,
-  FieldPath,
-  FieldValues,
+    Controller,
+    ControllerProps,
+    FieldPath,
+    FieldValues,
 } from "react-hook-form";
 import { ItemProps, ListProps, Virtuoso } from "react-virtuoso";
-import ListItemText from "@mui/material/ListItemText";
-import Box from "@mui/material/Box";
 
 type MultipleSelectExtendedInputProps<T extends object> = {
   label: string;
@@ -94,7 +94,7 @@ function MultipleSelectExtendedInputRaw<T extends object>(
   return (
     <ClickAwayListener onClickAway={() => setIsOpen(false)}>
       <div>
-        <Box mb={0.5} ref={boxRef}>
+        <Box sx={{ mb: 0.5 }} ref={boxRef}>
           <TextField
             ref={ref}
             name={props.name}
@@ -134,7 +134,7 @@ function MultipleSelectExtendedInputRaw<T extends object>(
               }}
             >
               {props.isSearchable && (
-                <Box p={2}>
+                <Box sx={{ p: 2 }}>
                   <TextField
                     placeholder={props.searchPlaceholder}
                     value={props.search}

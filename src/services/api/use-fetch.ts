@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback } from "react";
-import { AUTH_REFRESH_URL } from "./config";
-import { FetchInputType, FetchInitType } from "./types/fetch-params";
-import useLanguage from "../i18n/use-language";
 import { getTokensInfo, setTokensInfo } from "../auth/auth-tokens-info";
+import useLanguage from "../i18n/use-language";
+import { AUTH_REFRESH_URL } from "./config";
+import { FetchInitType, FetchInputType } from "./types/fetch-params";
 
 function useFetch() {
-  const language = useLanguage();
+  const language = useLanguage() as string;
 
   return useCallback(
     async (input: FetchInputType, init?: FetchInitType) => {

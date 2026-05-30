@@ -2,61 +2,50 @@ import { AuthPayload, AuthTokens } from "@/types/auth.types";
 import jwt from "jsonwebtoken";
 
 export class JwtService {
-  private secret = process.env.JWT_SECRET || "your-secret-key";
-  private refreshSecret = process.env.JWT_REFRESH_SECRET || "your-refresh-secret";
-  private expiration = process.env.JWT_EXPIRATION || "15m";
-  private refreshExpiration = process.env.JWT_REFRESH_EXPIRATION || "7d";
+  private readonly secret =
+    process.env.JWT_SECRET ?? "change-me-in-production-use-long-random-string";
+  private readonly refreshSecret =
+    process.env.JWT_REFRESH_SECRET ??
+    "change-me-refresh-in-production-use-long-random-string";
+  private readonly expiration = process.env.JWT_EXPIRATION ?? "15m";
 
-  /**
-   * Generate JWT token pair (access + refresh)
-   */
-  generateTokens(payload: AuthPayload): AuthTokens {
+  generateTokens(
+    payload: AuthPayload,
+    options?: { refreshExpiresInDays?: number }
+  ): AuthTokens {
+    const refreshDays = options?.refreshExpiresInDays ?? 7;
     const accessToken = jwt.sign(payload, this.secret, {
-      expiresIn: this.expiration,
+      expiresIn: this.expiration as jwt.SignOptions["expiresIn"],
     });
-
     const refreshToken = jwt.sign(payload, this.refreshSecret, {
-      expiresIn: this.refreshExpiration,
+      expiresIn: `${refreshDays}d`,
     });
-
     return { accessToken, refreshToken };
   }
 
-  /**
-   * Verify and decode access token
-   */
   verifyAccessToken(token: string): AuthPayload | null {
     try {
-      const decoded = jwt.verify(token, this.secret) as AuthPayload;
-      return decoded;
+      return jwt.verify(token, this.secret) as AuthPayload;
     } catch {
       return null;
     }
   }
 
-  /**
-   * Verify and decode refresh token
-   */
   verifyRefreshToken(token: string): AuthPayload | null {
     try {
-      const decoded = jwt.verify(token, this.refreshSecret) as AuthPayload;
-      return decoded;
+      return jwt.verify(token, this.refreshSecret) as AuthPayload;
     } catch {
       return null;
     }
   }
 
-  /**
-   * Extract token from Authorization header
-   */
-  extractTokenFromHeader(authHeader?: string): string | null {
+  extractTokenFromHeader(authHeader?: string | null): string | null {
     if (!authHeader) return null;
     const parts = authHeader.split(" ");
-    if (parts.length === 2 && parts[0] === "Bearer") {
-      return parts[1];
-    }
+    if (parts.length === 2 && parts[0] === "Bearer") return parts[1];
     return null;
   }
 }
 
 export const jwtService = new JwtService();
+

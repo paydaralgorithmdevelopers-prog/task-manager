@@ -1,14 +1,14 @@
 import {
-  boolean,
-  index,
-  integer,
-  jsonb,
-  numeric,
-  pgTable,
-  text,
-  timestamp,
-  uniqueIndex,
-  varchar
+    boolean,
+    index,
+    integer,
+    jsonb,
+    numeric,
+    pgTable,
+    text,
+    timestamp,
+    uniqueIndex,
+    varchar
 } from "drizzle-orm/pg-core";
 
 // ============================================
@@ -20,16 +20,22 @@ export const usersTable = pgTable(
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     name: varchar({ length: 255 }).notNull(),
+    username: varchar({ length: 100 }).unique(),
     email: varchar({ length: 255 }).notNull().unique(),
     passwordHash: varchar({ length: 255 }).notNull(),
     avatar: varchar({ length: 500 }),
-    role: varchar({ length: 50 }).default("user").notNull(),
-    status: varchar({ length: 50 }).default("active").notNull(), // active, inactive, banned
+    // Role: ROOT_ADMIN | SCRUM_MASTER | DEVELOPER | VIEWER
+    role: varchar({ length: 50 }).default("VIEWER").notNull(),
+    isActive: boolean().default(true).notNull(),
+    refreshTokenHash: varchar({ length: 255 }),
+    createdBy: integer(), // nullable — null for the seed ROOT_ADMIN
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp().defaultNow().notNull(),
   },
   (table) => ({
     emailIdx: uniqueIndex("users_email_idx").on(table.email),
+    usernameIdx: index("users_username_idx").on(table.username),
+    roleIdx: index("users_role_idx").on(table.role),
   })
 );
 

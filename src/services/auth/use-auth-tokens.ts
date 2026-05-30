@@ -1,8 +1,7 @@
-import { useContext } from "react";
-import { AuthTokensContext } from "./auth-context";
-
+// Legacy stub — social auth no longer uses cookie-based tokens.
+// Kept for backward compatibility with social auth components.
 function useAuthTokens() {
-  return useContext(AuthTokensContext);
+  return { setTokensInfo: (_tokens: unknown) => {} };
 }
 
 export default useAuthTokens;

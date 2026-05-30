@@ -58,10 +58,6 @@ export function useTranslation(namespace: string, options?: object) {
       if (cookies === language) return;
       setCookie(String(language));
     }, [language, cookies, setCookie]);
-
-    useEffect(() => {
-      console.log(language)
-    }, [])
   }
 
   return originalInstance;

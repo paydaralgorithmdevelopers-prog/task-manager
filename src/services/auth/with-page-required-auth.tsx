@@ -1,70 +1,53 @@
 "use client";
-import { useRouter } from "next/navigation";
-import useAuth from "./use-auth";
-import React, { FunctionComponent, useEffect } from "react";
-import useLanguage from "../i18n/use-language";
-import { RoleEnum } from "../api/types/role";
 
-type PropsType = {
+import { Role } from "@/features/auth/constants/roles";
+import { useRouter } from "next/navigation";
+import { FunctionComponent, useEffect } from "react";
+import useLanguage from "../i18n/use-language";
+import useAuth from "./use-auth";
+
+type PageProps = {
   params?: { [key: string]: string | string[] | undefined };
   searchParams?: { [key: string]: string | string[] | undefined };
 };
 
-type OptionsType = {
-  roles: RoleEnum[];
+type Options = {
+  roles?: Role[];
 };
 
-const roles = Object.values(RoleEnum).filter(
-  (value) => !Number.isNaN(Number(value))
-) as RoleEnum[];
-
 function withPageRequiredAuth(
-  Component: FunctionComponent<PropsType>,
-  options?: OptionsType
+  Component: FunctionComponent<PageProps>,
+  options?: Options
 ) {
-  const optionRoles = options?.roles || roles;
+  const allowedRoles = options?.roles ?? Object.values(Role);
 
-  return function WithPageRequiredAuth(props: PropsType) {
+  return function WithPageRequiredAuth(props: PageProps) {
     const { user, isLoaded } = useAuth();
     const router = useRouter();
     const language = useLanguage();
 
     useEffect(() => {
-      const check = () => {
-        if (
-          (user &&
-            user?.role?.id &&
-            optionRoles.includes(Number(user?.role.id))) ||
-          !isLoaded
-        )
-          return;
+      if (!isLoaded) return;
 
-        const currentLocation = window.location.toString();
-        const returnToPath =
-          currentLocation.replace(new URL(currentLocation).origin, "") ||
-          `/${language}`;
-        const params = new URLSearchParams({
-          returnTo: returnToPath,
-        });
+      if (!user) {
+        const currentPath = window.location.pathname + window.location.search;
+        const params = new URLSearchParams({ returnTo: currentPath });
+        router.replace(`/${language}/login?${params.toString()}`);
+        return;
+      }
 
-        let redirectTo = `/${language}/sign-in?${params.toString()}`;
-
-        if (user) {
-          redirectTo = `/${language}`;
-        }
-
-        router.replace(redirectTo);
-      };
-
-      check();
+      if (!allowedRoles.includes(user.role)) {
+        router.replace(`/${language}/unauthorized`);
+      }
     }, [user, isLoaded, router, language]);
 
-    return user &&
-      user?.role?.id &&
-      optionRoles.includes(Number(user?.role.id)) ? (
-      <Component {...props} />
-    ) : null;
+    if (!isLoaded) return null;
+    if (!user) return null;
+    if (!allowedRoles.includes(user.role)) return null;
+
+    return <Component {...props} />;
   };
 }
 
 export default withPageRequiredAuth;
+

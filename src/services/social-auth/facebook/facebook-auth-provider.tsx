@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
-import { FacebookAuthLoginResponse, FacebookContext } from "./facebook-context";
-import { facebookAppId, isFacebookAuthEnabled } from "./facebook-config";
 import { languages } from "@/services/i18n/config";
 import useLanguage from "@/services/i18n/use-language";
+import { useCallback, useEffect, useMemo } from "react";
+import { facebookAppId, isFacebookAuthEnabled } from "./facebook-config";
+import { FacebookAuthLoginResponse, FacebookContext } from "./facebook-context";
 
 type FacebookAuthProviderProps = {
   children: React.ReactNode;
@@ -33,7 +33,7 @@ const languageToCode: Record<LanguageCode, string> = {
 };
 
 const useCodeFromLanguage = () => {
-  const languageOrCode = useLanguage();
+  const languageOrCode = useLanguage() as string;
   const language = languageOrCode
     .replace("_", "-")
     .split("-")[0] as LanguageCode;

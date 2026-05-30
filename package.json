@@ -10,7 +10,9 @@
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx --env-file=.env scripts/seed.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -63,6 +65,7 @@
     "@release-it/conventional-changelog": "^11.0.0",
     "@types/imap": "^0.8.43",
     "@types/js-cookie": "^3.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/mailparser": "^3.4.6",
     "@types/pg": "^8.20.0",
     "@typescript-eslint/eslint-plugin": "^8.60.0",

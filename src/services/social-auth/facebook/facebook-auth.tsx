@@ -1,18 +1,18 @@
 "use client";
 
+import { FullPageLoader } from "@/components/full-page-loader";
 import { useAuthFacebookLoginService } from "@/services/api/services/auth";
 import HTTP_CODES_ENUM from "@/services/api/types/http-codes";
 import useAuthActions from "@/services/auth/use-auth-actions";
-import useAuthTokens from "@/services/auth/use-auth-tokens";
-import { useState } from "react";
-import { FullPageLoader } from "@/components/full-page-loader";
-import Button from "@mui/material/Button";
-import useFacebookAuth from "./use-facebook-auth";
 import { useTranslation } from "@/services/i18n/client";
+import { AuthUser } from "@/types/auth.types";
+import Button from "@mui/material/Button";
+import { useState } from "react";
+import useFacebookAuth from "./use-facebook-auth";
 
 export default function FacebookAuth() {
   const { setUser } = useAuthActions();
-  const { setTokensInfo } = useAuthTokens();
+  // setTokensInfo removed — auth now uses httpOnly cookies only
   const authFacebookLoginService = useAuthFacebookLoginService();
   const facebook = useFacebookAuth();
   const { t } = useTranslation("common");
@@ -30,12 +30,7 @@ export default function FacebookAuth() {
       });
 
       if (status === HTTP_CODES_ENUM.OK) {
-        setTokensInfo({
-          token: data.token,
-          refreshToken: data.refreshToken,
-          tokenExpires: data.tokenExpires,
-        });
-        setUser(data.user);
+        setUser(data.user as unknown as AuthUser);
       }
     } finally {
       setIsLoading(false);

@@ -1,5 +1,16 @@
-import NeoLoginForm from "@/components/auth/neo-login-form";
+import LoginForm from "@/features/auth/components/login-form";
+import { Metadata } from "next";
+import { Suspense } from "react";
+
+export const metadata: Metadata = {
+  title: "Sign In — TaskMaster",
+};
 
 export default function LoginPage() {
-  return <NeoLoginForm />;
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
 }
+

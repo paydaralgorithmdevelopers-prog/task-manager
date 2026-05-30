@@ -1,4 +1,3 @@
-import ResponsiveAppBar from "@/components/app-bar";
 import ConfirmDialogProvider from "@/components/confirm-dialog/confirm-dialog-provider";
 import ToastContainer from "@/components/snackbar-provider";
 import InitColorSchemeScript from "@/components/theme/init-color-scheme-script";
@@ -9,8 +8,7 @@ import "@/services/i18n/config";
 import { languages } from "@/services/i18n/config";
 import StoreLanguageProvider from "@/services/i18n/store-language-provider";
 import LeavePageProvider from "@/services/leave-page/leave-page-provider";
-import FacebookAuthProvider from "@/services/social-auth/facebook/facebook-auth-provider";
-import GoogleAuthProvider from "@/services/social-auth/google/google-auth-provider";
+
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
@@ -57,18 +55,14 @@ export default async function RootLayout(props: {
             <StoreLanguageProvider>
               <ConfirmDialogProvider>
                 <AuthProvider>
-                  <GoogleAuthProvider>
-                    <FacebookAuthProvider>
-                      <LeavePageProvider>
-                        <ResponsiveAppBar />
-                        {children}
-                        <ToastContainer
-                          position="bottom-left"
-                          hideProgressBar
-                        />
-                      </LeavePageProvider>
-                    </FacebookAuthProvider>
-                  </GoogleAuthProvider>
+                  <LeavePageProvider>
+                    {/* <ResponsiveAppBar /> */}
+                    {children}
+                    <ToastContainer
+                      position="bottom-left"
+                      hideProgressBar
+                    />
+                  </LeavePageProvider>
                 </AuthProvider>
               </ConfirmDialogProvider>
             </StoreLanguageProvider>

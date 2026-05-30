@@ -1,106 +1,58 @@
 "use client";
 
-import { User } from "@/services/api/types/user";
+import { AuthUser } from "@/types/auth.types";
 import {
-  PropsWithChildren,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
+    PropsWithChildren,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
 } from "react";
-import {
-  AuthActionsContext,
-  AuthContext,
-  AuthTokensContext,
-  TokensInfo,
-} from "./auth-context";
-import useFetch from "@/services/api/use-fetch";
-import { AUTH_LOGOUT_URL, AUTH_ME_URL } from "@/services/api/config";
-import HTTP_CODES_ENUM from "../api/types/http-codes";
-import {
-  getTokensInfo,
-  setTokensInfo as setTokensInfoToStorage,
-} from "./auth-tokens-info";
+import { AuthActionsContext, AuthContext } from "./auth-context";
 
-function AuthProvider(props: PropsWithChildren<{}>) {
+function AuthProvider({ children }: PropsWithChildren) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const fetchBase = useFetch();
+  const [user, setUser] = useState<AuthUser | null>(null);
 
-  const setTokensInfo = useCallback((tokensInfo: TokensInfo) => {
-    setTokensInfoToStorage(tokensInfo);
+  const loadCurrentUser = useCallback(async () => {
+    try {
+      const response = await fetch("/api/auth/me", { method: "GET" });
+      if (response.ok) {
+        const data: AuthUser = await response.json();
+        setUser(data);
+      } else {
+        setUser(null);
+      }
+    } catch {
+      setUser(null);
+    } finally {
+      setIsLoaded(true);
+    }
+  }, []);
 
-    if (!tokensInfo) {
+  useEffect(() => {
+    loadCurrentUser();
+  }, [loadCurrentUser]);
+
+  const logOut = useCallback(async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
       setUser(null);
     }
   }, []);
 
-  const logOut = useCallback(async () => {
-    const tokens = getTokensInfo();
+  const contextValue = useMemo(() => ({ isLoaded, user }), [isLoaded, user]);
 
-    if (tokens?.token) {
-      await fetchBase(AUTH_LOGOUT_URL, {
-        method: "POST",
-      });
-    }
-    setTokensInfo(null);
-  }, [setTokensInfo, fetchBase]);
-
-  const loadData = useCallback(async () => {
-    const tokens = getTokensInfo();
-
-    try {
-      if (tokens?.token) {
-        const response = await fetchBase(AUTH_ME_URL, {
-          method: "GET",
-        });
-
-        if (response.status === HTTP_CODES_ENUM.UNAUTHORIZED) {
-          logOut();
-          return;
-        }
-
-        const data = await response.json();
-        setUser(data);
-      }
-    } finally {
-      setIsLoaded(true);
-    }
-  }, [fetchBase, logOut]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  const contextValue = useMemo(
-    () => ({
-      isLoaded,
-      user,
-    }),
-    [isLoaded, user]
-  );
-
-  const contextActionsValue = useMemo(
-    () => ({
-      setUser,
-      logOut,
-    }),
+  const actionsValue = useMemo(
+    () => ({ setUser, logOut }),
     [logOut]
-  );
-
-  const contextTokensValue = useMemo(
-    () => ({
-      setTokensInfo,
-    }),
-    [setTokensInfo]
   );
 
   return (
     <AuthContext.Provider value={contextValue}>
-      <AuthActionsContext.Provider value={contextActionsValue}>
-        <AuthTokensContext.Provider value={contextTokensValue}>
-          {props.children}
-        </AuthTokensContext.Provider>
+      <AuthActionsContext.Provider value={actionsValue}>
+        {children}
       </AuthActionsContext.Provider>
     </AuthContext.Provider>
   );

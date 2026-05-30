@@ -1,119 +1,71 @@
 "use client";
 
-import LogoutIcon from "@mui/icons-material/Logout";
-import {
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Container,
-    Grid,
-    Typography,
-} from "@mui/material";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { ROLE_LABELS } from "@/features/auth/constants/roles";
+import useAuth from "@/services/auth/use-auth";
+import withPageRequiredAuth from "@/services/auth/with-page-required-auth";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress";
+import Container from "@mui/material/Container";
+import Grid from "@mui/material/Grid";
+import Typography from "@mui/material/Typography";
 
-export default function DashboardPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+function DashboardPage() {
+  const { user, isLoaded } = useAuth();
 
-  useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    // TODO: Fetch user data from session/token
-    setUser({
-      name: "John Doe",
-      email: "john@example.com",
-    });
-    setLoading(false);
-  }, [router]);
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      router.push("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
-  };
-
-  if (loading) {
+  if (!isLoaded) {
     return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Typography>Loading...</Typography>
+      <Box sx={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", background: "#f5f5f5", py: 4 }}>
-      <Container maxWidth="lg">
-        {/* Header */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 6,
-          }}
-        >
-          <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-              TaskMaster Dashboard
-            </Typography>
-            <Typography color="textSecondary">
-              Welcome back, {user?.name}
-            </Typography>
-          </Box>
-          <Button
-            variant="contained"
-            color="error"
-            startIcon={<LogoutIcon />}
-            onClick={handleLogout}
-          >
-            Logout
-          </Button>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700 }} gutterBottom>
+          Welcome back, {user?.name}
+        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography variant="body2" color="text.secondary">{user?.email}</Typography>
+          {user?.role && <Chip label={ROLE_LABELS[user.role]} size="small" variant="outlined" />}
         </Box>
-
-        {/* Kanban Board Placeholder */}
-        <Grid container spacing={3}>
-          {["To Do", "In Progress", "Done"].map((column) => (
-            <Grid item xs={12} md={4} key={column}>
-              <Card
-                sx={{
-                  border: "2px solid #333",
-                  background: "#f9f9f9",
-                  minHeight: "500px",
-                }}
-              >
-                <CardContent>
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-                    {column}
-                  </Typography>
-                  <Typography color="textSecondary">
-                    Tasks will appear here
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
+      </Box>
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card><CardContent>
+            <Typography variant="h6" gutterBottom>Tasks</Typography>
+            <Typography variant="h3" sx={{ fontWeight: 700 }} color="primary">0</Typography>
+            <Typography variant="body2" color="text.secondary">Total assigned tasks</Typography>
+          </CardContent></Card>
         </Grid>
-      </Container>
-    </Box>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card><CardContent>
+            <Typography variant="h6" gutterBottom>In Progress</Typography>
+            <Typography variant="h3" sx={{ fontWeight: 700 }} color="warning.main">0</Typography>
+            <Typography variant="body2" color="text.secondary">Active tasks</Typography>
+          </CardContent></Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card><CardContent>
+            <Typography variant="h6" gutterBottom>Completed</Typography>
+            <Typography variant="h3" sx={{ fontWeight: 700 }} color="success.main">0</Typography>
+            <Typography variant="body2" color="text.secondary">Finished tasks</Typography>
+          </CardContent></Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card><CardContent>
+            <Typography variant="h6" gutterBottom>Overdue</Typography>
+            <Typography variant="h3" sx={{ fontWeight: 700 }} color="error.main">0</Typography>
+            <Typography variant="body2" color="text.secondary">Past due date</Typography>
+          </CardContent></Card>
+        </Grid>
+      </Grid>
+    </Container>
   );
 }
+
+export default withPageRequiredAuth(DashboardPage);
