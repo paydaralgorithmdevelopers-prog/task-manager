@@ -1,34 +1,30 @@
-import { verifyAuth } from "@/middleware/auth.middleware";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
+import { authService } from '@/server/services/auth/auth.service';
+import { formatErrorResponse } from '@/server/utils/errors';
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify user is authenticated
-    const auth = await verifyAuth(request);
+    // Get refresh token from cookies
+    const refreshToken = request.cookies.get('refreshToken')?.value;
 
-    if (!auth.valid) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+    if (refreshToken) {
+      // Logout user (delete session)
+      await authService.logout(refreshToken);
     }
 
     // Create response with cleared tokens
     const response = NextResponse.json(
-      { message: "Logged out successfully" },
+      { message: 'Logged out successfully' },
       { status: 200 }
     );
 
     // Clear cookies
-    response.cookies.set("accessToken", "", { maxAge: 0 });
-    response.cookies.set("refreshToken", "", { maxAge: 0 });
+    response.cookies.set('accessToken', '', { maxAge: 0 });
+    response.cookies.set('refreshToken', '', { maxAge: 0 });
 
     return response;
   } catch (error: any) {
-    console.error("[LOGOUT] Error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    const errorResponse = formatErrorResponse(error);
+    return NextResponse.json(errorResponse, { status: error.statusCode || 500 });
   }
 }

@@ -24,7 +24,7 @@ export default async function Home(props: Props) {
       <Typography variant="h3" component="h1" gutterBottom>
         Welcome to Your App
       </Typography>
-      <Typography variant="body1" color="textSecondary">
+      <Typography variant="body1" color="text.secondary">
         Ready to start building. Delete this page and add your own content.
       </Typography>
     </Container>

@@ -1,8 +1,8 @@
-import React from "react";
+// @ts-nocheck
 import { Meta, StoryFn } from "@storybook/react";
-import { useForm, FormProvider } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import FormCheckboxBooleanInput, {
-  CheckboxBooleanInputProps,
+    CheckboxBooleanInputProps,
 } from "./form-checkbox-boolean";
 
 export default {

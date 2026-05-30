@@ -1,318 +1,675 @@
 import {
-  boolean,
-  index,
-  integer,
-  jsonb,
-  numeric,
-  pgTable,
-  text,
-  timestamp,
-  uniqueIndex,
-  varchar
-} from "drizzle-orm/pg-core";
+    AnyPgColumn,
+    boolean,
+    date,
+    decimal,
+    index,
+    inet,
+    integer,
+    jsonb,
+    pgEnum,
+    pgTable,
+    text,
+    timestamp,
+    uniqueIndex,
+    varchar,
+} from 'drizzle-orm/pg-core';
 
 // ============================================
-// USERS & TEAMS
+// ENUMS
 // ============================================
 
-export const usersTable = pgTable(
-  "users",
+export const userStatusEnum = pgEnum('user_status', ['active', 'inactive', 'suspended']);
+export const themeEnum = pgEnum('theme', ['light', 'dark', 'system']);
+export const organizationRoleEnum = pgEnum('organization_role', ['owner', 'admin', 'member']);
+export const subscriptionTierEnum = pgEnum('subscription_tier', ['free', 'pro', 'enterprise']);
+export const projectStatusEnum = pgEnum('project_status', ['active', 'archived', 'completed']);
+export const teamRoleEnum = pgEnum('team_role', ['lead', 'member']);
+export const projectRoleEnum = pgEnum('project_role', [
+  'project_manager',
+  'scrum_master',
+  'team_lead',
+  'developer',
+  'qa_engineer',
+  'product_owner',
+  'viewer',
+]);
+export const sprintStatusEnum = pgEnum('sprint_status', ['planning', 'active', 'completed']);
+export const taskTypeEnum = pgEnum('task_type', ['feature', 'bug', 'chore', 'improvement', 'tech_debt']);
+export const taskStatusEnum = pgEnum('task_status', [
+  'backlog',
+  'todo',
+  'in_progress',
+  'code_review',
+  'testing',
+  'blocked',
+  'done',
+]);
+export const taskPriorityEnum = pgEnum('task_priority', ['low', 'medium', 'high', 'critical']);
+export const activityActionEnum = pgEnum('activity_action', [
+  'created',
+  'updated',
+  'deleted',
+  'status_changed',
+  'assigned',
+  'commented',
+  'moved',
+]);
+export const entityTypeEnum = pgEnum('entity_type', ['task', 'comment', 'project', 'sprint', 'user', 'team']);
+export const notificationTypeEnum = pgEnum('notification_type', [
+  'task_assigned',
+  'mention',
+  'comment',
+  'status_change',
+  'due_date',
+  'sprint_start',
+  'sprint_end',
+]);
+export const chatRoomTypeEnum = pgEnum('chat_room_type', ['project', 'team', 'direct']);
+export const presenceStatusEnum = pgEnum('presence_status', ['online', 'away', 'offline']);
+
+// ============================================
+// USERS & AUTHENTICATION
+// ============================================
+
+export const users = pgTable(
+  'users',
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    name: varchar({ length: 255 }).notNull(),
     email: varchar({ length: 255 }).notNull().unique(),
-    passwordHash: varchar({ length: 255 }).notNull(),
-    avatar: varchar({ length: 500 }),
-    role: varchar({ length: 50 }).default("user").notNull(),
-    status: varchar({ length: 50 }).default("active").notNull(), // active, inactive, banned
-    createdAt: timestamp().defaultNow().notNull(),
-    updatedAt: timestamp().defaultNow().notNull(),
+    name: varchar({ length: 255 }).notNull(),
+    passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+    avatarUrl: varchar('avatar_url', { length: 500 }),
+    status: userStatusEnum().notNull().default('active'),
+    emailVerified: boolean('email_verified').notNull().default(false),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (table) => ({
-    emailIdx: uniqueIndex("users_email_idx").on(table.email),
+    emailIdx: uniqueIndex('users_email_idx').on(table.email),
   })
 );
 
-export const teamsTable = pgTable(
-  "teams",
+export const userSessions = pgTable(
+  'user_sessions',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    refreshToken: varchar('refresh_token', { length: 500 }).notNull().unique(),
+    deviceInfo: jsonb('device_info'),
+    ipAddress: inet('ip_address'),
+    expiresAt: timestamp('expires_at').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    lastActivity: timestamp('last_activity').notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdIdx: index('user_sessions_user_id_idx').on(table.userId),
+    refreshTokenIdx: uniqueIndex('user_sessions_refresh_token_idx').on(table.refreshToken),
+  })
+);
+
+export const userPreferences = pgTable(
+  'user_preferences',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    userId: integer('user_id')
+      .notNull()
+      .unique()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    theme: themeEnum().notNull().default('system'),
+    language: varchar({ length: 10 }).notNull().default('en'),
+    timezone: varchar({ length: 100 }).notNull().default('UTC'),
+    notificationSettings: jsonb('notification_settings').default({}),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdIdx: uniqueIndex('user_preferences_user_id_idx').on(table.userId),
+  })
+);
+
+// ============================================
+// ORGANIZATIONS & MULTI-TENANCY
+// ============================================
+
+export const organizations = pgTable(
+  'organizations',
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     name: varchar({ length: 255 }).notNull(),
-    description: text(),
-    ownerId: integer().notNull(),
-    avatar: varchar({ length: 500 }),
-    createdAt: timestamp().defaultNow().notNull(),
-    updatedAt: timestamp().defaultNow().notNull(),
+    slug: varchar({ length: 100 }).notNull().unique(),
+    logoUrl: varchar('logo_url', { length: 500 }),
+    settings: jsonb().default({}),
+    subscriptionTier: subscriptionTierEnum('subscription_tier').notNull().default('free'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (table) => ({
-    ownerIdIdx: index("teams_owner_id_idx").on(table.ownerId),
+    slugIdx: uniqueIndex('organizations_slug_idx').on(table.slug),
   })
 );
 
-export const teamMembersTable = pgTable(
-  "team_members",
+export const organizationMembers = pgTable(
+  'organization_members',
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    teamId: integer().notNull(),
-    userId: integer().notNull(),
-    role: varchar({ length: 50 }).default("member").notNull(), // owner, admin, member
-    joinedAt: timestamp().defaultNow().notNull(),
+    organizationId: integer('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: organizationRoleEnum().notNull().default('member'),
+    joinedAt: timestamp('joined_at').notNull().defaultNow(),
   },
   (table) => ({
-    teamIdIdx: index("team_members_team_id_idx").on(table.teamId),
-    userIdIdx: index("team_members_user_id_idx").on(table.userId),
+    orgUserIdx: uniqueIndex('org_members_org_user_idx').on(table.organizationId, table.userId),
+    userIdIdx: index('org_members_user_id_idx').on(table.userId),
   })
 );
 
 // ============================================
-// TASKS & TASK MANAGEMENT
+// PROJECTS & TEAMS
 // ============================================
 
-export const tasksTable = pgTable(
-  "tasks",
+export const projects = pgTable(
+  'projects',
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    title: varchar({ length: 255 }).notNull(),
+    organizationId: integer('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    name: varchar({ length: 255 }).notNull(),
+    key: varchar({ length: 10 }).notNull(), // e.g., "PROJ"
     description: text(),
-    status: varchar({ length: 50 }).default("todo").notNull(), // todo, in_progress, in_review, done, blocked
-    priority: varchar({ length: 50 }).default("medium").notNull(), // low, medium, high, urgent
-    createdById: integer().notNull(),
-    assignedToId: integer(),
-    teamId: integer(),
-    dueDate: timestamp(),
-    startDate: timestamp(),
-    completedAt: timestamp(),
-    estimatedHours: numeric({ precision: 10, scale: 2 }),
-    actualHours: numeric({ precision: 10, scale: 2 }),
-    tags: jsonb().default([]), // For categorization
-    attachments: jsonb().default([]), // File URLs
-    createdAt: timestamp().defaultNow().notNull(),
-    updatedAt: timestamp().defaultNow().notNull(),
+    iconUrl: varchar('icon_url', { length: 500 }),
+    status: projectStatusEnum().notNull().default('active'),
+    startDate: date('start_date'),
+    endDate: date('end_date'),
+    createdBy: integer('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (table) => ({
-    statusIdx: index("tasks_status_idx").on(table.status),
-    priorityIdx: index("tasks_priority_idx").on(table.priority),
-    createdByIdx: index("tasks_created_by_idx").on(table.createdById),
-    assignedToIdx: index("tasks_assigned_to_idx").on(table.assignedToId),
-    teamIdIdx: index("tasks_team_id_idx").on(table.teamId),
-    dueDateIdx: index("tasks_due_date_idx").on(table.dueDate),
+    orgIdIdx: index('projects_org_id_idx').on(table.organizationId),
+    keyIdx: index('projects_key_idx').on(table.key),
+    orgKeyIdx: uniqueIndex('projects_org_key_idx').on(table.organizationId, table.key),
   })
 );
 
-export const taskAssignmentsTable = pgTable(
-  "task_assignments",
+export const teams = pgTable(
+  'teams',
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    taskId: integer().notNull(),
-    userId: integer().notNull(),
-    assignedAt: timestamp().defaultNow().notNull(),
+    organizationId: integer('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    name: varchar({ length: 255 }).notNull(),
+    description: text(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (table) => ({
-    taskIdIdx: index("task_assignments_task_id_idx").on(table.taskId),
-    userIdIdx: index("task_assignments_user_id_idx").on(table.userId),
+    orgIdIdx: index('teams_org_id_idx').on(table.organizationId),
   })
 );
 
-export const taskCommentsTable = pgTable(
-  "task_comments",
+export const teamMembers = pgTable(
+  'team_members',
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    taskId: integer().notNull(),
-    userId: integer().notNull(),
+    teamId: integer('team_id')
+      .notNull()
+      .references(() => teams.id, { onDelete: 'cascade' }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: teamRoleEnum().notNull().default('member'),
+    joinedAt: timestamp('joined_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    teamUserIdx: uniqueIndex('team_members_team_user_idx').on(table.teamId, table.userId),
+    userIdIdx: index('team_members_user_id_idx').on(table.userId),
+  })
+);
+
+export const projectMembers = pgTable(
+  'project_members',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: projectRoleEnum().notNull().default('developer'),
+    joinedAt: timestamp('joined_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    projectUserIdx: uniqueIndex('project_members_project_user_idx').on(table.projectId, table.userId),
+    userIdIdx: index('project_members_user_id_idx').on(table.userId),
+  })
+);
+
+// ============================================
+// SPRINTS
+// ============================================
+
+export const sprints = pgTable(
+  'sprints',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    name: varchar({ length: 255 }).notNull(),
+    goal: text(),
+    status: sprintStatusEnum().notNull().default('planning'),
+    startDate: date('start_date'),
+    endDate: date('end_date'),
+    capacity: integer(), // Story points
+    createdBy: integer('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    projectIdIdx: index('sprints_project_id_idx').on(table.projectId),
+    statusIdx: index('sprints_status_idx').on(table.status),
+  })
+);
+
+// ============================================
+// TASKS
+// ============================================
+
+export const tasks = pgTable(
+  'tasks',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    key: varchar({ length: 50 }).notNull().unique(), // e.g., "PROJ-123"
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    sprintId: integer('sprint_id').references(() => sprints.id, { onDelete: 'set null' }),
+    parentTaskId: integer('parent_task_id').references((): AnyPgColumn => tasks.id, { onDelete: 'cascade' }),
+    title: varchar({ length: 500 }).notNull(),
+    description: text(),
+    type: taskTypeEnum().notNull().default('feature'),
+    status: taskStatusEnum().notNull().default('backlog'),
+    priority: taskPriorityEnum().notNull().default('medium'),
+    storyPoints: integer('story_points'),
+    estimatedHours: decimal('estimated_hours', { precision: 10, scale: 2 }),
+    actualHours: decimal('actual_hours', { precision: 10, scale: 2 }),
+    createdBy: integer('created_by')
+      .notNull()
+      .references(() => users.id),
+    assignedTo: integer('assigned_to').references(() => users.id, { onDelete: 'set null' }),
+    dueDate: date('due_date'),
+    completedAt: timestamp('completed_at'),
+    position: integer().notNull().default(0),
+    attachments: jsonb().default([]),
+    metadata: jsonb().default({}),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    keyIdx: uniqueIndex('tasks_key_idx').on(table.key),
+    projectStatusIdx: index('tasks_project_status_idx').on(table.projectId, table.status),
+    sprintStatusIdx: index('tasks_sprint_status_idx').on(table.sprintId, table.status),
+    assignedToIdx: index('tasks_assigned_to_idx').on(table.assignedTo),
+    dueDateIdx: index('tasks_due_date_idx').on(table.dueDate),
+    createdByIdx: index('tasks_created_by_idx').on(table.createdBy),
+  })
+);
+
+// ============================================
+// LABELS & TAGS
+// ============================================
+
+export const labels = pgTable(
+  'labels',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    organizationId: integer('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    name: varchar({ length: 100 }).notNull(),
+    color: varchar({ length: 7 }).notNull(), // Hex color
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    orgNameIdx: uniqueIndex('labels_org_name_idx').on(table.organizationId, table.name),
+  })
+);
+
+export const taskLabels = pgTable(
+  'task_labels',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    taskId: integer('task_id')
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    labelId: integer('label_id')
+      .notNull()
+      .references(() => labels.id, { onDelete: 'cascade' }),
+  },
+  (table) => ({
+    taskLabelIdx: uniqueIndex('task_labels_task_label_idx').on(table.taskId, table.labelId),
+    labelIdIdx: index('task_labels_label_id_idx').on(table.labelId),
+  })
+);
+
+// ============================================
+// COMMENTS
+// ============================================
+
+export const comments = pgTable(
+  'comments',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    taskId: integer('task_id')
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    parentCommentId: integer('parent_comment_id').references((): AnyPgColumn => comments.id, { onDelete: 'cascade' }),
     content: text().notNull(),
-    createdAt: timestamp().defaultNow().notNull(),
-    updatedAt: timestamp().defaultNow().notNull(),
+    mentions: jsonb().default([]), // Array of user IDs
+    attachments: jsonb().default([]),
+    edited: boolean().notNull().default(false),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (table) => ({
-    taskIdIdx: index("task_comments_task_id_idx").on(table.taskId),
-    userIdIdx: index("task_comments_user_id_idx").on(table.userId),
+    taskIdIdx: index('comments_task_id_idx').on(table.taskId),
+    userIdIdx: index('comments_user_id_idx').on(table.userId),
+    parentCommentIdx: index('comments_parent_comment_idx').on(table.parentCommentId),
   })
 );
 
-export const taskActivityLog = pgTable(
-  "task_activity_log",
+export const commentReactions = pgTable(
+  'comment_reactions',
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    taskId: integer().notNull(),
-    userId: integer().notNull(),
-    action: varchar({ length: 100 }).notNull(), // created, updated, commented, status_changed, assigned
-    changeData: jsonb(), // Store what changed: {field: "status", oldValue: "todo", newValue: "in_progress"}
-    createdAt: timestamp().defaultNow().notNull(),
+    commentId: integer('comment_id')
+      .notNull()
+      .references(() => comments.id, { onDelete: 'cascade' }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    emoji: varchar({ length: 10 }).notNull(),
   },
   (table) => ({
-    taskIdIdx: index("task_activity_log_task_id_idx").on(table.taskId),
-    userIdIdx: index("task_activity_log_user_id_idx").on(table.userId),
-  })
-);
-
-// ============================================
-// SCHEDULING & REMINDERS
-// ============================================
-
-export const scheduledTasksTable = pgTable(
-  "scheduled_tasks",
-  {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    taskId: integer().notNull(),
-    scheduleType: varchar({ length: 50 }).notNull(), // once, daily, weekly, monthly, custom
-    scheduledFor: timestamp().notNull(),
-    frequency: varchar({ length: 50 }), // For recurring tasks
-    dayOfWeek: varchar({ length: 50 }), // For weekly tasks
-    dayOfMonth: integer(), // For monthly tasks
-    isActive: boolean().default(true).notNull(),
-    lastRunAt: timestamp(),
-    nextRunAt: timestamp(),
-    createdAt: timestamp().defaultNow().notNull(),
-  },
-  (table) => ({
-    taskIdIdx: index("scheduled_tasks_task_id_idx").on(table.taskId),
-    scheduledForIdx: index("scheduled_tasks_scheduled_for_idx").on(
-      table.scheduledFor
+    commentUserEmojiIdx: uniqueIndex('comment_reactions_comment_user_emoji_idx').on(
+      table.commentId,
+      table.userId,
+      table.emoji
     ),
-    isActiveIdx: index("scheduled_tasks_is_active_idx").on(table.isActive),
-  })
-);
-
-export const remindersTable = pgTable(
-  "reminders",
-  {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    taskId: integer().notNull(),
-    userId: integer().notNull(),
-    type: varchar({ length: 50 }).notNull(), // email, push, in_app, sms
-    reminderTime: timestamp().notNull(),
-    sendAt: timestamp().notNull(),
-    status: varchar({ length: 50 }).default("pending").notNull(), // pending, sent, failed, cancelled
-    attempts: integer().default(0).notNull(),
-    maxAttempts: integer().default(3).notNull(),
-    lastAttemptAt: timestamp(),
-    errorMessage: text(),
-    createdAt: timestamp().defaultNow().notNull(),
-  },
-  (table) => ({
-    userIdIdx: index("reminders_user_id_idx").on(table.userId),
-    taskIdIdx: index("reminders_task_id_idx").on(table.taskId),
-    sendAtIdx: index("reminders_send_at_idx").on(table.sendAt),
-    statusIdx: index("reminders_status_idx").on(table.status),
   })
 );
 
 // ============================================
-// PUSH NOTIFICATIONS
+// ACTIVITY & AUDIT
 // ============================================
 
-export const pushSubscriptionsTable = pgTable(
-  "push_subscriptions",
+export const activityLogs = pgTable(
+  'activity_logs',
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    userId: integer().notNull(),
-    endpoint: text().notNull(),
-    auth: varchar({ length: 255 }).notNull(),
-    p256dh: varchar({ length: 255 }).notNull(),
-    deviceName: varchar({ length: 255 }),
-    deviceType: varchar({ length: 50 }), // web, mobile, desktop
-    isActive: boolean().default(true).notNull(),
-    lastUsedAt: timestamp(),
-    createdAt: timestamp().defaultNow().notNull(),
+    organizationId: integer('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    entityType: entityTypeEnum('entity_type').notNull(),
+    entityId: integer('entity_id').notNull(),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id),
+    action: activityActionEnum().notNull(),
+    changes: jsonb(), // { field, oldValue, newValue }
+    ipAddress: inet('ip_address'),
+    userAgent: text('user_agent'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (table) => ({
-    userIdIdx: index("push_subscriptions_user_id_idx").on(table.userId),
-    endpointIdx: index("push_subscriptions_endpoint_idx").on(table.endpoint),
-    isActiveIdx: index("push_subscriptions_is_active_idx").on(table.isActive),
+    entityIdx: index('activity_logs_entity_idx').on(table.entityType, table.entityId),
+    userIdIdx: index('activity_logs_user_id_idx').on(table.userId),
+    orgCreatedIdx: index('activity_logs_org_created_idx').on(table.organizationId, table.createdAt),
   })
 );
 
-export const pushNotificationsTable = pgTable(
-  "push_notifications",
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+export const notifications = pgTable(
+  'notifications',
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    userId: integer().notNull(),
-    taskId: integer(),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    type: notificationTypeEnum().notNull(),
     title: varchar({ length: 255 }).notNull(),
-    message: text().notNull(),
-    type: varchar({ length: 50 }).notNull(), // task_assigned, task_due, task_updated, comment_added, reminder
-    data: jsonb(), // Additional data like task details, action URLs
-    isRead: boolean().default(false).notNull(),
-    readAt: timestamp(),
-    status: varchar({ length: 50 }).default("pending").notNull(), // pending, sent, failed, cancelled
-    createdAt: timestamp().defaultNow().notNull(),
+    content: text().notNull(),
+    link: varchar({ length: 500 }),
+    metadata: jsonb().default({}),
+    read: boolean().notNull().default(false),
+    readAt: timestamp('read_at'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (table) => ({
-    userIdIdx: index("push_notifications_user_id_idx").on(table.userId),
-    taskIdIdx: index("push_notifications_task_id_idx").on(table.taskId),
-    isReadIdx: index("push_notifications_is_read_idx").on(table.isRead),
-    statusIdx: index("push_notifications_status_idx").on(table.status),
+    userReadIdx: index('notifications_user_read_idx').on(table.userId, table.read),
+    userCreatedIdx: index('notifications_user_created_idx').on(table.userId, table.createdAt),
   })
 );
 
 // ============================================
-// WEBSOCKET & REAL-TIME EVENTS
+// CHAT SYSTEM
 // ============================================
 
-export const userSessionsTable = pgTable(
-  "user_sessions",
+export const chatRooms = pgTable(
+  'chat_rooms',
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    userId: integer().notNull(),
-    sessionId: varchar({ length: 255 }).notNull().unique(),
-    socketId: varchar({ length: 255 }),
-    userAgent: text(),
-    ipAddress: varchar({ length: 50 }),
-    isActive: boolean().default(true).notNull(),
-    lastActivityAt: timestamp().defaultNow().notNull(),
-    createdAt: timestamp().defaultNow().notNull(),
+    organizationId: integer('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    type: chatRoomTypeEnum().notNull(),
+    name: varchar({ length: 255 }),
+    projectId: integer('project_id').references(() => projects.id, { onDelete: 'cascade' }),
+    teamId: integer('team_id').references(() => teams.id, { onDelete: 'cascade' }),
+    createdBy: integer('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (table) => ({
-    userIdIdx: index("user_sessions_user_id_idx").on(table.userId),
-    sessionIdIdx: index("user_sessions_session_id_idx").on(table.sessionId),
+    orgIdIdx: index('chat_rooms_org_id_idx').on(table.organizationId),
+    projectIdIdx: index('chat_rooms_project_id_idx').on(table.projectId),
+    teamIdIdx: index('chat_rooms_team_id_idx').on(table.teamId),
   })
 );
 
-export const realtimeEventsTable = pgTable(
-  "realtime_events",
+export const chatRoomMembers = pgTable(
+  'chat_room_members',
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    userId: integer().notNull(),
-    taskId: integer(),
-    teamId: integer(),
-    eventType: varchar({ length: 100 }).notNull(), // task_created, task_updated, task_deleted, status_changed, comment_added
-    eventData: jsonb().notNull(), // Full event payload
-    broadcastTo: varchar({ length: 50 }).default("user").notNull(), // user, team, public
-    isProcessed: boolean().default(false).notNull(),
-    createdAt: timestamp().defaultNow().notNull(),
+    roomId: integer('room_id')
+      .notNull()
+      .references(() => chatRooms.id, { onDelete: 'cascade' }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    joinedAt: timestamp('joined_at').notNull().defaultNow(),
+    lastReadAt: timestamp('last_read_at'),
   },
   (table) => ({
-    userIdIdx: index("realtime_events_user_id_idx").on(table.userId),
-    taskIdIdx: index("realtime_events_task_id_idx").on(table.taskId),
-    teamIdIdx: index("realtime_events_team_id_idx").on(table.teamId),
-    eventTypeIdx: index("realtime_events_event_type_idx").on(table.eventType),
-    isProcessedIdx: index("realtime_events_is_processed_idx").on(
-      table.isProcessed
+    roomUserIdx: uniqueIndex('chat_room_members_room_user_idx').on(table.roomId, table.userId),
+    userIdIdx: index('chat_room_members_user_id_idx').on(table.userId),
+  })
+);
+
+export const chatMessages = pgTable(
+  'chat_messages',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    roomId: integer('room_id')
+      .notNull()
+      .references(() => chatRooms.id, { onDelete: 'cascade' }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    content: text().notNull(),
+    mentions: jsonb().default([]),
+    attachments: jsonb().default([]),
+    edited: boolean().notNull().default(false),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    roomCreatedIdx: index('chat_messages_room_created_idx').on(table.roomId, table.createdAt),
+    userIdIdx: index('chat_messages_user_id_idx').on(table.userId),
+  })
+);
+
+// ============================================
+// REAL-TIME PRESENCE
+// ============================================
+
+export const userPresence = pgTable(
+  'user_presence',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    socketId: varchar('socket_id', { length: 255 }).notNull().unique(),
+    status: presenceStatusEnum().notNull().default('online'),
+    currentPage: varchar('current_page', { length: 500 }),
+    lastActivity: timestamp('last_activity').notNull().defaultNow(),
+    connectedAt: timestamp('connected_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdIdx: index('user_presence_user_id_idx').on(table.userId),
+    socketIdIdx: uniqueIndex('user_presence_socket_id_idx').on(table.socketId),
+  })
+);
+
+export const taskViewers = pgTable(
+  'task_viewers',
+  {
+    taskId: integer('task_id')
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    lastViewedAt: timestamp('last_viewed_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: uniqueIndex('task_viewers_pk').on(table.taskId, table.userId),
+  })
+);
+
+// ============================================
+// FILE ATTACHMENTS
+// ============================================
+
+export const attachments = pgTable(
+  'attachments',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    organizationId: integer('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    uploadedBy: integer('uploaded_by')
+      .notNull()
+      .references(() => users.id),
+    filename: varchar({ length: 255 }).notNull(),
+    filePath: varchar('file_path', { length: 1000 }).notNull(),
+    fileSize: integer('file_size').notNull(), // bytes
+    mimeType: varchar('mime_type', { length: 100 }).notNull(),
+    entityType: entityTypeEnum('entity_type').notNull(),
+    entityId: integer('entity_id').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    entityIdx: index('attachments_entity_idx').on(table.entityType, table.entityId),
+    uploadedByIdx: index('attachments_uploaded_by_idx').on(table.uploadedBy),
+  })
+);
+
+// ============================================
+// TASK DEPENDENCIES
+// ============================================
+
+export const taskDependencies = pgTable(
+  'task_dependencies',
+  {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    taskId: integer('task_id')
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    dependsOnTaskId: integer('depends_on_task_id')
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    taskDependencyIdx: uniqueIndex('task_dependencies_task_dependency_idx').on(
+      table.taskId,
+      table.dependsOnTaskId
     ),
+    dependsOnIdx: index('task_dependencies_depends_on_idx').on(table.dependsOnTaskId),
   })
 );
 
 // ============================================
-// PREFERENCES & NOTIFICATIONS SETTINGS
+// TASK WATCHERS
 // ============================================
 
-export const userPreferencesTable = pgTable(
-  "user_preferences",
+export const taskWatchers = pgTable(
+  'task_watchers',
   {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    userId: integer().notNull().unique(),
-    language: varchar({ length: 10 }).default("en").notNull(),
-    timezone: varchar({ length: 100 }).default("UTC").notNull(),
-    theme: varchar({ length: 50 }).default("auto").notNull(), // light, dark, auto
-    notificationsEnabled: boolean().default(true).notNull(),
-    emailNotifications: boolean().default(true).notNull(),
-    pushNotifications: boolean().default(true).notNull(),
-    soundEnabled: boolean().default(true).notNull(),
-    dailyDigest: boolean().default(false).notNull(),
-    preferences: jsonb().default({}), // Custom preferences
-    updatedAt: timestamp().defaultNow().notNull(),
+    taskId: integer('task_id')
+      .notNull()
+      .references(() => tasks.id, { onDelete: 'cascade' }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (table) => ({
-    userIdIdx: uniqueIndex("user_preferences_user_id_idx").on(table.userId),
+    taskUserIdx: uniqueIndex('task_watchers_task_user_idx').on(table.taskId, table.userId),
+    userIdIdx: index('task_watchers_user_id_idx').on(table.userId),
   })
 );
+
+// Type exports for use in application
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type Organization = typeof organizations.$inferSelect;
+export type NewOrganization = typeof organizations.$inferInsert;
+export type Project = typeof projects.$inferSelect;
+export type NewProject = typeof projects.$inferInsert;
+export type Task = typeof tasks.$inferSelect;
+export type NewTask = typeof tasks.$inferInsert;
+export type Sprint = typeof sprints.$inferSelect;
+export type NewSprint = typeof sprints.$inferInsert;
+export type Comment = typeof comments.$inferSelect;
+export type NewComment = typeof comments.$inferInsert;
+export type ChatRoom = typeof chatRooms.$inferSelect;
+export type NewChatRoom = typeof chatRooms.$inferInsert;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type NewChatMessage = typeof chatMessages.$inferInsert;
+export type Notification = typeof notifications.$inferSelect;
+export type NewNotification = typeof notifications.$inferInsert;

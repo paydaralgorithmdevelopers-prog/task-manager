@@ -9,7 +9,7 @@ function useLanguage() {
   return (
     (Array.isArray(params?.language)
       ? params?.language[0]
-      : params?.language) || fallbackLanguage
+      : params?.language) || fallbackLanguage.en
   );
 }
 
