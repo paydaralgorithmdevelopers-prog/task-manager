@@ -3,6 +3,7 @@
 import { ThemeProvider as MuiThemeProvider, CssBaseline } from '@mui/material';
 import { ReactNode, useMemo, createContext, useContext, useState, useEffect } from 'react';
 import { darkTheme, lightTheme } from '@/styles/theme';
+import { SocketProvider } from '@/server/socket/socket-client';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -71,7 +72,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     <ThemeContext.Provider value={value}>
       <MuiThemeProvider theme={theme}>
         <CssBaseline />
-        {children}
+        <SocketProvider>{children}</SocketProvider>
       </MuiThemeProvider>
     </ThemeContext.Provider>
   );
